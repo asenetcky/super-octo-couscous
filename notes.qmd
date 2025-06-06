@@ -58,10 +58,93 @@ Going through the book Machine Learning Production Systems.
         probably a better choice - otherwise normalization is the 
         way to go.
 - Bucketizing
+    - create categories based on a numeric range - think quantile bucketing
+    - feature crosses - combine multi feats into a new feat. encode nonlinearity
+    in a feature space or encode the same info with fewer features.
+    - e.g we have 2 feats- day of week and hour of day -> sqeeze into hour of 
+    week and get two for one.
 - One-hot encoding
 - Dimensionality reduction
+    - reduce the number of input features while retaining the
+    greatest variance
+    - PCA - the most widely known dimentionality reduction algo
+    project your data into a lower dimensional space
+    - t-distributed stochastic neighbor embedding (t-SNE) and
+    Uniform Manifold Approximation and Projection (UMAP) do this as well.
+    -  can be visual but _usually_  __semantic__ or __word__ embeddings.
+    - e.g. the word _apple_ will be much closer in meaning to the word
+    _orange_ but further from _sailboat_.
+    - data is projected into a semantic embedding space by training a model
+    to understand the relationships between items - often through
+    self-supervised trainings on very large datasets or _corpora_.
 - Image Transformations
+    
+    
+## feature transformation at scale
+- folks used to hop across different envs -  now there are _unified_ frameworks
+called _pipelines_ to train and deploy with _consistent_ and _reproducible_
+results.
 
-```{python}
+### choose a framework that scales well
 
+- pandas does not scale
+- apache beam can run on the laptop - direct runner
+- then can be swapped for google dataflow runner or apache flink runner
+
+### avoid training-serving skew
+
+- consistnecy!!
+- what you do to training you should do to serving.
+- old days - dev/train in python and then switch to java - rife with issues
+
+### consider instance-level full-pass transformations
+
+- __instance-level transformations__: take an example and transfrom separately
+without refencing anything else
+- __full-pass transformations__: need to analyze the entire dataset before doing
+any transformations.
+
+- normalization - that's _full-pass_ - possibly not feasible on TBs of data
+-  determining buckets - could be _full-pass_, not always though.
+
+
+## using TensorFlow Transfrom
+
+need good tools to do feature engineering at scale.
+
+TensorFlow Transfrom (TFT) is a separate open source library
+that can be used by iteself - in the book they are going to use it in
+the context of TensorFlow Extended pipelines (TFX).
+
+::: {.callout-note}
+    Think of TFX pipelines as a complete training process
+    designed to be used for production deployments.
+:::
+
+TFT can be used for __processing__, __training__, and __serving__
+requests, especially if using TF. if not working in TF you can still
+use TFT - but serving will need to be done elsewhere.
+
+by combining both - transformations done are included in the model
+so the same transforms are done regardless of where you _deploy_. neat!
+
+### typical TFX pipeline
+
+1. raw data to ExampleGen
+    1. ExampleGen ingest sand splits data into training and eval by default 
+1. then to StatisticsGen
+    1. StatisticsGen calcs stats, full pass over mean, sd min, mac etc...
+1. then on to SchemaGen
+
+```{mermaid}
+flowchart LR
+A[raw data] --> B[ExampleGen]
+B --> C[StatisticsGen]
+C --> D[SchemaGen]
+D --> E(Downstream)
+E --> F[ExampleValidator]
 ```
+
+etc....
+
+
