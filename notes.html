@@ -2213,15 +2213,26 @@ vertical-align: -.125em;
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_data_validation <span class="im">as</span> tfdv</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> polars <span class="im">as</span> pl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-stderr">
+<pre><code>2025-06-06 08:15:31.357472: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-06-06 08:15:31.358219: I external/local_tsl/tsl/cuda/cudart_stub.cc:32] Could not find cuda drivers on your machine, GPU will not be used.
+2025-06-06 08:15:31.360197: I external/local_tsl/tsl/cuda/cudart_stub.cc:32] Could not find cuda drivers on your machine, GPU will not be used.
+2025-06-06 08:15:31.366608: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:479] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2025-06-06 08:15:31.378851: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:10575] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2025-06-06 08:15:31.378886: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1442] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2025-06-06 08:15:31.387581: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-06-06 08:15:32.101966: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT</code></pre>
+</div>
 </div>
 <p>grabbed some spam data and moved to <code>data/spam.csv</code>.</p>
-<div id="3a388586" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>stats <span class="op">=</span> pl.read_csv(<span class="st">&quot;data/spam.csv&quot;</span>, encoding<span class="op">=</span><span class="st">&quot;latin-1&quot;</span>).to_pandas()</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>stats <span class="op">=</span> tfdv.generate_statistics_from_dataframe(stats)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(stats.datasets[<span class="dv">0</span>].features[<span class="dv">0</span>].string_stats.rank_histogram)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>tfdv.visualize_statistics(stats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-example" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>stats <span class="op">=</span> pl.read_csv(<span class="st">&quot;data/spam.csv&quot;</span>, encoding<span class="op">=</span><span class="st">&quot;latin-1&quot;</span>).to_pandas()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>stats <span class="op">=</span> tfdv.generate_statistics_from_dataframe(stats)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(stats.datasets[<span class="dv">0</span>].features[<span class="dv">0</span>].string_stats.rank_histogram)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>tfdv.visualize_statistics(stats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>buckets {
   label: &quot;ham&quot;
@@ -2235,7 +2246,7 @@ buckets {
 }
 </code></pre>
 </div>
-<div class="cell-output cell-output-display">
+<div id="example" class="cell-output cell-output-display">
 <iframe id="facets-iframe" width="100%" height="500px"></iframe>
         <script>
         facets_iframe = document.getElementById('facets-iframe');
@@ -2268,7 +2279,16 @@ buckets {
 </ul></li>
 <li>Normalizing and standardizing
 <ul>
-<li></li>
+<li>normalizing: aka min-max scaling, shifts and scales features to value range of [0,1] -standardization aka z-score shifts and scales features to values of mean 0 and standard deviation of 1.</li>
+<li>both require <em>global</em> attributes known for your feature values aka you need to know min and max.
+<ul>
+<li>this can be signifcant processing for large datasets.</li>
+</ul></li>
+<li>when to pick which one?
+<ul>
+<li>you can experiment and see which works better</li>
+<li>OR if values seem to be a gaussian dist - standardization probably a better choice - otherwise normalization is the way to go.</li>
+</ul></li>
 </ul></li>
 <li>Bucketizing</li>
 <li>One-hot encoding</li>

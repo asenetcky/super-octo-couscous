@@ -45,7 +45,18 @@ Going through the book Machine Learning Production Systems.
     - eliminating or correcting erroneous data
     - per-feature tranformations
 - Normalizing and standardizing
-    - 
+    - normalizing: aka min-max scaling, shifts and scales features 
+    to value range of [0,1]
+    -standardization aka z-score shifts and scales features to 
+    values of mean 0 and standard deviation of 1.
+    - both require _global_ attributes known for your feature values
+    aka you need to know min and max.
+        - this can be signifcant processing for large datasets.
+    - when to pick which one?
+        - you can experiment and see which works better 
+        - OR if values seem to be a gaussian dist - standardization 
+        probably a better choice - otherwise normalization is the 
+        way to go.
 - Bucketizing
 - One-hot encoding
 - Dimensionality reduction
