@@ -9,3 +9,5 @@ stats = tfdv.generate_statistics_from_dataframe(stats)
 print(
     stats.datasets[0].features[0].string_stats.rank_histogram
 )
+
+tfdv.visualize_statistics(stats)
