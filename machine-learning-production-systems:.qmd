@@ -148,3 +148,65 @@ E --> F[ExampleValidator]
 etc....
 
 
+## Analyzers
+
+In order to do simple calcs or impressive calcs over gobs
+of data TF has the concept _analyzers_.
+
+examples:
+
+- scaling
+    - scale_to_z_score
+    - scale_to_0_1
+- bucketizing
+    - quantiles
+    - apply_buckets
+    - bucketize
+- vocabulary
+    - bag_of_words
+    -tfidf
+    -ngrams
+- dimentionality reduction
+    - pca
+
+analyzers use apache beam for processing. they only run once
+for each model training workflow and _not_ during serving.
+instead the results produced are captured as _constants_ in
+the transform graph and included in a saved model.
+constants are then used as part of transforming individual examples
+during training and serving.
+
+### Code example
+
+
+```{python}
+# | eval: false
+
+import tensorflow_transform as tft
+
+
+def preprocessing_fn(inputs):
+    # feature engineering code
+
+    # for example
+    for key in DENSE_FLOAT_FEATURE_KEYS:
+        outputs[key] = tft.scale_to_z_Score(inputs[key])
+
+    for key in VOCAB_FEATURE_KEYS:
+        outputs[key] = tft.vocabulary(inputs[key], vocab_filename=key)
+
+    for key in BUCKET_FEATURE_KEYS:
+        outputs[key] = tft.bucketize(inputs[key], FEATURE_BUCKET_COUNT)
+
+```
+
+## Feature Selection
+
+_feature selection_ is a set of algos and techniques designed to
+improve qualirt of data by determining which features actually help
+your model learn.
+
+### feature spaces
+- feature space: n-dimentional space defined by features, minus your target
+label. so 2 features, 2 dimensional, 3, 3 dimensional etc...
+
