@@ -1,0 +1,67 @@
+---
+title: notes
+author: Alexander Senetcky
+format:
+    html:
+        embed-resources: true
+---
+
+```{python}
+# | label: setup
+# | code-fold: true
+
+import tensorflow_data_validation as tfdv
+import polars as pl
+```
+
+grabbed some spam data and moved to `data/spam.csv`.
+
+```{python}
+# | label: example
+stats = pl.read_csv("data/spam.csv", encoding="latin-1").to_pandas()
+stats = tfdv.generate_statistics_from_dataframe(stats)
+
+print(stats.datasets[0].features[0].string_stats.rank_histogram)
+
+tfdv.visualize_statistics(stats)
+```
+
+whoa - ^ that actually renders out with quarto to html.
+I wasn't sure if it would. perhaps not the best medium, but for
+something quick - that's amazing.
+
+## Overview
+
+Just jotting down notes. Trying to take advantage of repitition.
+Going through the book Machine Learning Production Systems.
+
+## quick intro example
+
+## Preprocessing
+
+- data wrangling and data cleansing
+    - enforcing correct data types
+    - valid values
+    - eliminating or correcting erroneous data
+    - per-feature tranformations
+- Normalizing and standardizing
+    - normalizing: aka min-max scaling, shifts and scales features 
+    to value range of [0,1]
+    -standardization aka z-score shifts and scales features to 
+    values of mean 0 and standard deviation of 1.
+    - both require _global_ attributes known for your feature values
+    aka you need to know min and max.
+        - this can be signifcant processing for large datasets.
+    - when to pick which one?
+        - you can experiment and see which works better 
+        - OR if values seem to be a gaussian dist - standardization 
+        probably a better choice - otherwise normalization is the 
+        way to go.
+- Bucketizing
+- One-hot encoding
+- Dimensionality reduction
+- Image Transformations
+
+```{python}
+
+```
