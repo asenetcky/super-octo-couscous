@@ -210,3 +210,115 @@ your model learn.
 - feature space: n-dimentional space defined by features, minus your target
 label. so 2 features, 2 dimensional, 3, 3 dimensional etc...
 
+- features space coverage
+    - think - almost like code coverage
+    - you have your training feature space coverage
+    - and your serving feature space + coverage
+    - ideally they are the same, and/or trianing is slightly larger
+    - keep monitoring in place to watch drift if ranges shift
+
+goal of feature selection: include only minimum number of features
+that provide the maximum amount of predictive information
+to help our model learn.
+
+
+resource considerations for having each feature
+
+^ feature  ^ cost + complexity
+
+- unsupervised feature selection
+    - no consideration between feature and label
+    - looks at how _correlated_ features are to each other
+    - if two or more featurew are highly corellated - consider
+    keeping only, the best performing one
+
+- supervised feature selection
+    - focuses on relationship between feature and label
+    - tries to assess predictive info associated with each feature
+    called __feature importance__
+
+### filter methods
+use correlation to filter features
+
+- pearson
+- kendall tau
+- spearman
+
+f-test, mutual information, chi-squared
+
+
+```{python}
+# | label: pandas-example
+# | eval: false
+
+# pearson correlation is default in pandas
+cor = df.corr()
+cor_target = abs(cor["feature_name"])
+
+# select highly correlated features to reduce/ elim
+redundant_features = cor_target[cor_target > 0.8]
+```
+
+lets look at univariate feature selection with `scikit-learn`.
+
+
+```{python}
+# | eval: false
+
+# typical scikit-learn pattern per author
+
+import sklearn
+
+
+def univariate_selection():
+    X_train, X_test, Y_train, Y_test = train_test_split(
+        X, Y, test_size=0.2, stratify=Y, random_state=123
+    )
+
+    X_train_scaled = StandardScaler().fit_transform(X_train)
+    X_test_scaled = StandardScaler().fit_transform(X_test)
+    min_max_scaler = MinMaxScaler()
+    Scaled_X = min_max_scaler.fit_transform(X_train_scaled)
+    selector = SelectKBest(chi2, k=20)  # use chi-squared test
+    X_new = selector.fit_transform(Scaled_x, Y_train)
+    feeature_idx = selector.get_support()
+    feature_names = df.drop("diagnosis_int", axis=1).columns[feature_idx]  # pandas
+    return feature_names
+```
+
+### wrapper methods
+
+- supervised - meaning they ened labels
+- measure impact of iteratively adding/ dropping features
+
+- choose feature per iter
+- train and eval
+- compare eval metrics
+
+computationally demaining.
+
+
+three types of wrapper methods
+- forward selection: 
+    - iterative and greedy
+    - start with 1 feat, train and eval
+    - next iter, keep prev feat and add one additional feat, repeat
+    - keep features that goive best performance for the enxt round
+    - repeat until no improvement
+- backward elimination:
+    - basically the opposite of forward selection
+    - start with all features and then remove them one by one
+
+- recursive feature elimination:
+    - use _feature importance_ NOT model performance.
+    - select number of desired features you want
+    - then start with all features, train model, remove a feature, train model
+    repeat....
+    - rank features by feature important (need to have a method for assign importance)
+    - discard features to get down to desired number
+
+
+not all models can measure importance. the most cmmon class of models
+that offer the ability to measure importance is tree-based models.
+Also, you need to decide how many features you want, and that
+isn't always obvious.
