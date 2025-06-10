@@ -322,3 +322,122 @@ not all models can measure importance. the most cmmon class of models
 that offer the ability to measure importance is tree-based models.
 Also, you need to decide how many features you want, and that
 isn't always obvious.
+
+
+recursive feature elimination with scikit learn might
+look like this:
+
+```{python}
+# | eval: false
+
+
+def run_rfe(label_name, X, Y, num_to_keep):
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, Y, test_size=0.2, random_state=0
+    )
+    
+    X_train_scaled = StandardScaler().fit_transform(X_train)
+    X_test_scaled = StandardScaler().fit_transform(X_test)
+
+    model = RandomForestClassifier(
+        criterion = "entropy",
+        random_State = 47
+    )
+    
+    rfe = RFE(model, n_features_to_select = num_to_keep)
+    rfe = rfe.fit(X_train_scaled, y_train)
+    
+    feature_names = df.drop(label_name, axis = 1).columns(rfe.get_suppport())
+
+    return feature_names
+
+```
+
+### embedded methods
+
+etc...
+
+### using TF transform to tokenize text
+
+a BERT model will want tokens and token ids.
+they might also expect _control tokens_ such as
+start, stop or pad tokens.
+
+Tensorflow Text for this example - also PyTorch's TorchText.
+
+Before converting text into tokens
+you should normalize  the text to supported char encoding (utf-8)
+and clean (remove common patterns that occur in every sample)
+
+
+> which tokenizer should you use?
+> the type of tokenizer should match
+> what was used by the foundational model
+> in this example BERT.
+
+
+BERT example
+
+
+```{python}
+# | eval: false
+
+import tensorflow as tf
+import tensorflow_hub as hub
+import tensorflow_text as tf_text
+
+START_TOKEN_ID = 101
+END_TOKEN__ID = 102
+
+TFHUB_URL = (
+    "https://www.kaggle.com/models/tensorflow/bert/TensorFlow2/en-uncased-preprocess/3"
+)
+
+
+def load_bert_model(model_url=TFHUB_URL):
+    bert_layer = hub.KerasLayer(handle=model_url, trainable=False)
+    return bert_layer
+
+
+def _preprocessing_fn(inputs):
+    vocab_file_path = (
+        load_bert_model().resolved_object.vocab_file.asset_path
+    )  # I can't get vocab_file onward to work (dunno if this is outdated?)
+
+    bert_tokenizer = tf_text.BertTokenizer(
+        vocab_lookup_table=vocab_file_path, token_out_type=tf.int64, lower_case=True
+    )
+
+    text = inputs["message"]
+    category = inputs["category"]
+
+    # normalize text
+    text = tf_text.normalize_utf8(text)
+
+    # tokenization
+    tokens = bert_tokenizer.tokenize(text).merge_dims(1, -1)
+
+    # add control tokens
+    tokens, input_type_ids = tf_text.combine_segments(
+        tokens, start_of_sequence_id=START_TOKEN_ID, end_of_segment_id=END_TOKEN__ID
+    )
+
+    # token truncation / padding
+    tokens, input_mask_ids = tf_text.pad_model_inputs(tokens, max_seq_length=128)
+
+    # convert categories to labels
+    labels = tft.compute_and_apply_vocabulary(label, vocab_filename="category")
+
+    return {
+        "labels": labels,
+        "input_ids": tokens,
+        "input_mask_ids": input_mask_ids,
+        "input_type_ids": input_type_ids,
+    }
+```
+
+
+```{python}
+load_bert_model()
+_preprocessing_fn(["hello", "chairs", "world"])
+```
