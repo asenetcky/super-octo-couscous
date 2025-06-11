@@ -435,3 +435,29 @@ def _preprocessing_fn(inputs):
         "input_type_ids": input_type_ids,
     }
 ```
+
+
+## Advanced Labeling
+
+using snorkel
+
+```{python}
+# | eval: false
+
+from snorkel.labeling import labeling_function
+
+
+@labeling_function()
+def lf_contains_my(x):
+    # many spam comments contain my: 'my channel', 'my video' etc....
+    return SPAM if "my" in x.text.lower() else ABSTAIN
+
+
+@labeling_function()
+def lf_short_comment(x):
+    # non-spamcomments are often short, like cool video!
+    return NOT_SPAM if len(x.text.split()) < 5 else ABSTAIN
+```
+
+
+
